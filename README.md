@@ -1,4 +1,4 @@
-# Paper Feed Viewer
+# Paper Viewer
 
 A Zotero 7 desktop plugin that adds a dark paper gallery viewer for the current Zotero item view.
 
@@ -8,7 +8,7 @@ This is a working MVP spine tested in Zotero 7.0.32 on Windows. It includes:
 
 - Zotero 7 `manifest.json`
 - bootstrapped plugin lifecycle in `bootstrap.js`
-- a `Paper Feed` menu item and toolbar entry
+- a `Paper Viewer` menu item and toolbar entry
 - a dark overlay viewer
 - left/right keyboard and button navigation
 - metadata extraction from the current Zotero item view
@@ -28,23 +28,23 @@ npm run build
 The generated plugin package is:
 
 ```text
-dist/paper-feed-viewer-0.2.7.xpi
+dist/paper-viewer-0.2.8.xpi
 ```
 
 ## Install Locally
 
 1. In Zotero, open `Tools` -> `Plugins`.
-2. If an older `Paper Feed Viewer` is installed, remove it.
+2. If an older `Paper Feed Viewer` or `Paper Viewer` is installed, remove it.
 3. Close Zotero completely.
 4. Reopen Zotero.
 5. Open `Tools` -> `Plugins`.
-6. Install `dist/paper-feed-viewer-0.2.7.xpi` with `Install Add-on From File...`.
+6. Install `dist/paper-viewer-0.2.8.xpi` with `Install Add-on From File...`.
 7. Restart Zotero if prompted.
 
 ## Use
 
 1. Select a Zotero collection, search, or item list.
-2. Click the `Paper Feed` toolbar button or menu entry.
+2. Click the `Paper Viewer` toolbar button or menu entry.
 3. Browse with the left/right buttons or arrow keys.
 4. Click `Open` to open the selected PDF in Zotero's native reader.
 5. Click `X` or press Escape to close the gallery.

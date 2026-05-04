@@ -30,7 +30,7 @@ src/
 package.json
 ```
 
-Zotero plugins usually define lifecycle behavior such as startup and shutdown. The plugin should use startup to register the `Paper Feed` entry point and shutdown to remove UI it added.
+Zotero plugins usually define lifecycle behavior such as startup and shutdown. The plugin should use startup to register the `Paper Viewer` entry point and shutdown to remove UI it added.
 
 ## Development Flow
 
@@ -39,12 +39,12 @@ Zotero plugins usually define lifecycle behavior such as startup and shutdown. T
 3. Build the plugin.
 4. Install the generated `.xpi` file into Zotero for testing.
 5. Confirm Zotero shows the plugin as enabled.
-6. Add a basic `Paper Feed` menu item or toolbar button.
+6. Add a basic `Paper Viewer` menu item or toolbar button.
 7. Iterate toward the viewer shell and item integration.
 
 ## First Local Test
 
-The first useful test is not thumbnail generation. The first useful test is proving that Zotero can load the plugin and display a clickable `Paper Feed` entry.
+The first useful test is not thumbnail generation. The first useful test is proving that Zotero can load the plugin and display a clickable `Paper Viewer` entry.
 
 Once that works, add the dark viewer shell. Then connect the viewer to Zotero items. Thumbnail rendering should come after the viewer can already browse item metadata.
 
@@ -64,7 +64,7 @@ file size
 ## MVP Build Order
 
 1. Loadable plugin.
-2. `Paper Feed` entry point.
+2. `Paper Viewer` entry point.
 3. Dark viewer shell.
 4. Current collection/search item list.
 5. Horizontal navigation.

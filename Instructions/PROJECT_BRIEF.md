@@ -1,4 +1,4 @@
-# Paper Feed Viewer for Zotero
+# Paper Viewer for Zotero
 
 ## Goal
 
@@ -9,7 +9,7 @@ The MVP should feel like a focused paper gallery, not a replacement for Zotero. 
 ## MVP Experience
 
 1. The user selects a collection or search in Zotero.
-2. The user clicks a `Paper Feed` button or menu item.
+2. The user clicks a `Paper Viewer` button or menu item.
 3. A dark full-window viewer opens on top of Zotero.
 4. The viewer shows one paper at a time, centered around a first-page preview.
 5. The user moves between papers with left/right controls and keyboard arrows.

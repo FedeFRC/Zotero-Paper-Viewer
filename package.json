@@ -1,6 +1,6 @@
 {
-  "name": "paper-feed-viewer",
-  "version": "0.2.7",
+  "name": "paper-viewer",
+  "version": "0.2.8",
   "private": true,
   "description": "A focused paper gallery viewer for Zotero collections and searches.",
   "scripts": {

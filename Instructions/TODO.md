@@ -5,7 +5,7 @@
 - Create Zotero 7 plugin project scaffold.
 - Configure plugin ID, name, version, and build output.
 - Add basic startup and shutdown lifecycle handlers.
-- Add a simple menu item or toolbar entry named `Paper Feed`.
+- Add a simple menu item or toolbar entry named `Paper Viewer`.
 - Confirm the plugin loads in Zotero 7.
 
 ## Milestone 2: Viewer Shell

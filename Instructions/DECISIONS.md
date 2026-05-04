@@ -8,7 +8,7 @@ Reason: replacing the central item table is more fragile because it touches Zote
 
 ## MVP Name
 
-Working name: `Paper Feed Viewer`.
+Working name: `Paper Viewer`.
 
 The name may change later, but it captures the main idea: a visual browsing feed for papers already stored in Zotero.
 

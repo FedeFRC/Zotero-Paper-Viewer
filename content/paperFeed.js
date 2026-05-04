@@ -19,7 +19,7 @@ var PaperFeedViewer = (function () {
 
   function startup(context) {
     pluginContext = context;
-    log("Started Paper Feed Viewer " + context.version);
+    log("Started Paper Viewer " + context.version);
   }
 
   function shutdown() {
@@ -78,7 +78,7 @@ var PaperFeedViewer = (function () {
     ].filter(Boolean);
 
     if (!menus.length) {
-      log("Could not find a Zotero menu popup for Paper Feed entry point.");
+      log("Could not find a Zotero menu popup for Paper Viewer entry point.");
       return;
     }
 
@@ -94,7 +94,7 @@ var PaperFeedViewer = (function () {
 
       const menuItem = createXULElement(doc, "menuitem");
       menuItem.id = id;
-      menuItem.setAttribute("label", "Paper Feed");
+      menuItem.setAttribute("label", "Paper Viewer");
       menuItem.setAttribute("accesskey", "P");
       menuItem.addEventListener("command", () => openViewer(win));
 
@@ -114,15 +114,15 @@ var PaperFeedViewer = (function () {
     }
 
     if (!toolbar) {
-      log("Could not find Zotero items toolbar for Paper Feed button.");
+      log("Could not find Zotero items toolbar for Paper Viewer button.");
       return;
     }
 
     const button = createXULElement(doc, "toolbarbutton");
     button.id = "paper-feed-viewer-toolbar-button";
     button.className = "zotero-tb-button";
-    button.setAttribute("label", "Paper Feed");
-    button.setAttribute("tooltiptext", "Open Paper Feed");
+    button.setAttribute("label", "Paper Viewer");
+    button.setAttribute("tooltiptext", "Open Paper Viewer");
     button.setAttribute("tabindex", "-1");
     button.addEventListener("command", () => openViewer(win));
 
@@ -149,7 +149,7 @@ var PaperFeedViewer = (function () {
     const overlay = html(doc, "div", "pfv-overlay");
     overlay.id = OVERLAY_ID;
     overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-label", "Paper Feed");
+    overlay.setAttribute("aria-label", "Paper Viewer");
     overlay.setAttribute("tabindex", "-1");
 
     doc.documentElement.appendChild(overlay);
@@ -208,13 +208,13 @@ var PaperFeedViewer = (function () {
     const header = html(doc, "header", "pfv-header");
     const titleGroup = html(doc, "div", "pfv-title-group");
     titleGroup.append(
-      html(doc, "div", "pfv-kicker", "Paper Feed"),
+      html(doc, "div", "pfv-kicker", "Paper Viewer"),
       html(doc, "div", "pfv-count", state.papers.length ? `${state.currentIndex + 1} of ${state.papers.length}` : "No papers")
     );
 
     const closeButton = html(doc, "button", "pfv-icon-button", "X");
     closeButton.setAttribute("type", "button");
-    closeButton.setAttribute("aria-label", "Close Paper Feed");
+    closeButton.setAttribute("aria-label", "Close Paper Viewer");
     closeButton.addEventListener("click", () => closeViewer(win));
 
     header.append(titleGroup, closeButton);
@@ -251,7 +251,7 @@ var PaperFeedViewer = (function () {
       card.append(
         html(doc, "div", "pfv-preview pfv-preview-empty", "No papers"),
         html(doc, "h1", "pfv-paper-title", "Nothing to show here yet"),
-        html(doc, "p", "pfv-paper-detail", "Select a collection, saved search, or one or more regular Zotero items, then open Paper Feed again.")
+        html(doc, "p", "pfv-paper-detail", "Select a collection, saved search, or one or more regular Zotero items, then open Paper Viewer again.")
       );
       return card;
     }
@@ -1128,7 +1128,7 @@ var PaperFeedViewer = (function () {
 
   function log(message) {
     try {
-      Zotero.debug("[Paper Feed Viewer] " + message);
+      Zotero.debug("[Paper Viewer] " + message);
     }
     catch (error) {}
   }

@@ -9,7 +9,7 @@ function uninstall(data, reason) {}
 async function startup({ id, version, rootURI, resourceURI }, reason) {
   rootURI = rootURI || resourceURI.spec;
 
-  Zotero.debug("[Paper Feed Viewer] bootstrap startup");
+  Zotero.debug("[Paper Viewer] bootstrap startup");
   var { OS } = ChromeUtils.importESModule("chrome://zotero/content/osfile.mjs");
   this.OS = OS;
   this.PathUtils = PathUtils;
@@ -31,7 +31,7 @@ function shutdown(data, reason) {
 }
 
 function onMainWindowLoad({ window }, reason) {
-  Zotero.debug("[Paper Feed Viewer] main window load");
+  Zotero.debug("[Paper Viewer] main window load");
   PaperFeedViewer?.onMainWindowLoad(window);
 }
 
