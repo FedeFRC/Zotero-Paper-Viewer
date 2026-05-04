@@ -2,9 +2,30 @@
 
 A Zotero 7 desktop plugin that adds a dark paper gallery viewer for the current Zotero item view.
 
-## Current State
+## Try It
 
-This is a working MVP spine tested in Zotero 7.0.32 on Windows. It includes:
+You do not need to build the plugin to test it.
+
+1. Download the latest XPI:
+   [paper-viewer-0.2.8.xpi](https://github.com/FedeFRC/Zotero-Paper-Viewer/releases/latest/download/paper-viewer-0.2.8.xpi)
+2. In Zotero, open `Tools` -> `Plugins`.
+3. Click the gear icon, then choose `Install Add-on From File...`.
+4. Select the downloaded `.xpi` file.
+5. Restart Zotero if prompted.
+
+Tested with Zotero `7.0.32` on Windows.
+
+## Use
+
+1. Select a Zotero collection, saved search, or item list that contains papers with PDF attachments.
+2. Click the `Paper Viewer` toolbar button, or open it from Zotero's menu.
+3. Browse with the left/right buttons or arrow keys.
+4. Click `Open` to open the selected PDF in Zotero's native reader.
+5. Click `X` or press Escape to close the gallery.
+
+## What To Expect
+
+Paper Viewer shows the current Zotero item view as a dark, keyboard-friendly paper gallery. It includes:
 
 - Zotero 7 `manifest.json`
 - bootstrapped plugin lifecycle in `bootstrap.js`
@@ -19,7 +40,15 @@ This is a working MVP spine tested in Zotero 7.0.32 on Windows. It includes:
 
 If a thumbnail cannot be generated, the viewer falls back to the stable placeholder preview surface.
 
-## Build
+## Troubleshooting
+
+If Zotero says the add-on may be incompatible, make sure you downloaded the `.xpi` from the latest release rather than a source-code ZIP.
+
+If `Paper Viewer` installs but does not appear in Zotero, fully close Zotero and reopen it. On Windows, also check that no Zotero process is still running in Task Manager.
+
+If thumbnails show as unavailable, open Zotero's error log and look for `[Paper Viewer]` messages. The viewer should still work, but the log can show whether a PDF path, cache write, or PDF.js render step failed.
+
+## Build From Source
 
 ```powershell
 npm run build
@@ -31,23 +60,18 @@ The generated plugin package is:
 dist/paper-viewer-0.2.8.xpi
 ```
 
-## Install Locally
+Install the locally built package through Zotero's `Tools` -> `Plugins` window.
+
+## Updating A Local Test Install
+
+When testing a new local build:
 
 1. In Zotero, open `Tools` -> `Plugins`.
-2. If an older `Paper Feed Viewer` or `Paper Viewer` is installed, remove it.
+2. Remove any older `Paper Feed Viewer` or `Paper Viewer` install.
 3. Close Zotero completely.
 4. Reopen Zotero.
-5. Open `Tools` -> `Plugins`.
-6. Install `dist/paper-viewer-0.2.8.xpi` with `Install Add-on From File...`.
-7. Restart Zotero if prompted.
-
-## Use
-
-1. Select a Zotero collection, search, or item list.
-2. Click the `Paper Viewer` toolbar button or menu entry.
-3. Browse with the left/right buttons or arrow keys.
-4. Click `Open` to open the selected PDF in Zotero's native reader.
-5. Click `X` or press Escape to close the gallery.
+5. Install the new `.xpi`.
+6. Restart Zotero if prompted.
 
 ## Zotero Packaging Notes
 
