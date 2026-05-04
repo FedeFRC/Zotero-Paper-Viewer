@@ -1,0 +1,10 @@
+{
+  "name": "paper-feed-viewer",
+  "version": "0.2.7",
+  "private": true,
+  "description": "A focused paper gallery viewer for Zotero collections and searches.",
+  "scripts": {
+    "build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-xpi.ps1",
+    "clean": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue\""
+  }
+}

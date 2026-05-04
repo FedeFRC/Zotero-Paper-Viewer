@@ -1,0 +1,15 @@
+{
+  "manifest_version": 2,
+  "name": "Paper Feed Viewer",
+  "version": "0.2.7",
+  "description": "A focused paper gallery viewer for Zotero collections and searches.",
+  "author": "Local development",
+  "applications": {
+    "zotero": {
+      "id": "paper-feed-viewer@example.com",
+      "update_url": "https://example.com/paper-feed-viewer/updates.json",
+      "strict_min_version": "6.999",
+      "strict_max_version": "8.0.*"
+    }
+  }
+}
