@@ -14,9 +14,11 @@ The name may change later, but it captures the main idea: a visual browsing feed
 
 ## Reader Strategy
 
-The MVP will not include a custom PDF reader.
+The plugin includes a lightweight in-view PDF preview, but not a full custom PDF reader.
 
-The `Open` button will open the selected PDF in Zotero's native reader. A custom vertical reader can be considered after the gallery experience works well.
+`Open in Paper Viewer` renders PDF pages as vertically stacked page images inside the gallery. This is useful for quick inspection, but it is not a real PDF reader with text selection, search, annotation, or zoom.
+
+`Open in background` opens the selected PDF in Zotero's native reader, which remains the correct place for full reading and annotation.
 
 ## Thumbnail Strategy
 
@@ -48,4 +50,4 @@ The plugin should read from Zotero and open Zotero resources, but it should avoi
 
 The gallery should never render many PDFs directly while scrolling.
 
-It should show cached thumbnails and generate missing thumbnails lazily in the background.
+It should show cached thumbnails and generate missing thumbnails lazily in the background. Full in-view PDF page rendering should happen only after the user explicitly chooses `Open in Paper Viewer`, and it should reset when the user navigates away.

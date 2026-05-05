@@ -10,12 +10,15 @@ var PaperFeedViewer = (function () {
   const THUMBNAIL_MAX_WIDTH = 720;
   const THUMBNAIL_MAX_HEIGHT = 960;
   const THUMBNAIL_MAX_CONCURRENT_JOBS = 2;
+  const READER_MAX_PAGE_WIDTH = 920;
+  const READER_MAX_PAGE_SCALE = 2;
 
   const windows = new WeakMap();
   const thumbnailJobs = new Map();
   const pendingThumbnailQueue = [];
   let pluginContext = null;
   let pdfjsLibPromise = null;
+  let pdfjsAssetBase = "resource://pdf.js/web/";
 
   function startup(context) {
     pluginContext = context;
@@ -191,6 +194,9 @@ var PaperFeedViewer = (function () {
     }
 
     removePendingThumbnailsForWindow(win);
+    for (let paper of state.papers) {
+      revokeReaderResources(win, paper);
+    }
     state.overlay?.remove();
     state.overlay = null;
   }
@@ -245,7 +251,7 @@ var PaperFeedViewer = (function () {
   }
 
   function renderCard(doc, paper, win) {
-    const card = html(doc, "section", "pfv-card");
+    const card = html(doc, "section", paper?.readerMode ? "pfv-card pfv-card-reading" : "pfv-card");
 
     if (!paper) {
       card.append(
@@ -256,7 +262,7 @@ var PaperFeedViewer = (function () {
       return card;
     }
 
-    const preview = renderPreview(doc, paper);
+    const preview = renderPreview(doc, paper, win);
 
     const meta = html(doc, "div", "pfv-meta");
     meta.append(
@@ -268,19 +274,31 @@ var PaperFeedViewer = (function () {
     );
 
     const actions = html(doc, "div", "pfv-actions");
-    const openButton = html(doc, "button", "pfv-primary-button", "Open");
-    openButton.setAttribute("type", "button");
-    openButton.disabled = !paper.attachmentID;
-    openButton.addEventListener("click", () => openAttachment(win, paper));
-    actions.append(openButton);
+    const readButton = html(doc, "button", "pfv-primary-button", "Open in Paper Viewer");
+    readButton.setAttribute("type", "button");
+    readButton.disabled = !paper.attachmentID || paper.readerStatus === "loading";
+    readButton.addEventListener("click", () => openPaperInViewer(win, paper));
+
+    const backgroundButton = html(doc, "button", "pfv-secondary-button", "Open in background");
+    backgroundButton.setAttribute("type", "button");
+    backgroundButton.disabled = !paper.attachmentID;
+    backgroundButton.addEventListener("click", () => openAttachmentInBackground(win, paper));
+    actions.append(readButton, backgroundButton);
+    if (paper.backgroundOpenStatus === "opened") {
+      actions.append(html(doc, "div", "pfv-action-feedback", "Opened in Zotero"));
+    }
 
     meta.append(actions);
     card.append(preview, meta);
     return card;
   }
 
-  function renderPreview(doc, paper) {
+  function renderPreview(doc, paper, win) {
     const preview = html(doc, "div", "pfv-preview");
+
+    if (paper.readerMode) {
+      return renderPDFReader(doc, paper);
+    }
 
     if (paper.thumbnailURL) {
       const image = html(doc, "img", "pfv-thumbnail");
@@ -301,6 +319,44 @@ var PaperFeedViewer = (function () {
     return preview;
   }
 
+  function renderPDFReader(doc, paper) {
+    const reader = html(doc, "div", "pfv-pdf-reader");
+
+    if (paper.readerStatus === "failed") {
+      reader.append(
+        html(doc, "div", "pfv-reader-message", paper.readerStatusText || "PDF preview unavailable")
+      );
+      return reader;
+    }
+
+    if (paper.readerPages?.length) {
+      const pages = html(doc, "div", "pfv-reader-pages");
+      for (let page of paper.readerPages) {
+        const image = html(doc, "img", "pfv-reader-page");
+        image.setAttribute("src", page.url);
+        image.setAttribute("alt", "Page " + page.pageNumber);
+        image.setAttribute("width", String(page.width));
+        image.setAttribute("height", String(page.height));
+        pages.append(image);
+      }
+      reader.append(pages);
+    }
+
+    if (paper.readerStatus === "loading") {
+      reader.append(
+        html(doc, "div", "pfv-reader-message", paper.readerStatusText || "Loading PDF...")
+      );
+    }
+
+    if (!paper.readerPages?.length && paper.readerStatus !== "loading") {
+      reader.append(
+        html(doc, "div", "pfv-reader-message", "Click Open in Paper Viewer to read this PDF here.")
+      );
+    }
+
+    return reader;
+  }
+
   function metadataRow(doc, label, value) {
     const row = html(doc, "div", "pfv-metadata-row");
     row.append(html(doc, "span", "pfv-metadata-label", label), html(doc, "span", "pfv-metadata-value", value || "Unknown"));
@@ -312,6 +368,7 @@ var PaperFeedViewer = (function () {
     if (!state || !state.papers.length) {
       return;
     }
+    closeCurrentPaperReader(win, state);
     state.currentIndex = clamp(state.currentIndex - 1, 0, state.papers.length - 1);
     renderViewer(win);
   }
@@ -321,8 +378,22 @@ var PaperFeedViewer = (function () {
     if (!state || !state.papers.length) {
       return;
     }
+    closeCurrentPaperReader(win, state);
     state.currentIndex = clamp(state.currentIndex + 1, 0, state.papers.length - 1);
     renderViewer(win);
+  }
+
+  function closeCurrentPaperReader(win, state) {
+    const paper = state.papers[state.currentIndex];
+    if (!paper?.readerMode) {
+      return;
+    }
+
+    revokeReaderResources(win, paper);
+    paper.readerMode = false;
+    paper.readerStatus = null;
+    paper.readerStatusText = null;
+    paper.readerPages = [];
   }
 
   async function collectPapers(win) {
@@ -416,7 +487,15 @@ var PaperFeedViewer = (function () {
       thumbnailPath: thumbnail?.path || null,
       thumbnailURL: thumbnail?.url || null,
       thumbnailStatus: thumbnail?.url ? "ready" : thumbnail?.status || "missing",
-      thumbnailStatusText: thumbnail?.statusText || null
+      thumbnailStatusText: thumbnail?.statusText || null,
+      readerMode: false,
+      readerStatus: null,
+      readerStatusText: null,
+      readerPages: [],
+      readerObjectURLs: [],
+      readerJob: null,
+      backgroundOpenStatus: null,
+      backgroundOpenTimer: null
     };
   }
 
@@ -632,13 +711,7 @@ var PaperFeedViewer = (function () {
 
     const pdfjsLib = await getPDFJSLib(win);
     const data = await OS.File.read(filePath);
-    const loadingTask = pdfjsLib.getDocument({
-      data,
-      cMapUrl: "resource://pdf.js/web/cmaps/",
-      cMapPacked: true,
-      standardFontDataUrl: "resource://pdf.js/web/standard_fonts/",
-      disableFontFace: true
-    });
+    const loadingTask = pdfjsLib.getDocument(getPDFDocumentOptions(win, data));
 
     let pdf = null;
     try {
@@ -684,14 +757,64 @@ var PaperFeedViewer = (function () {
   async function getPDFJSLib(win) {
     if (!pdfjsLibPromise) {
       pdfjsLibPromise = Promise.resolve().then(() => {
-        if (!win.pdfjsLib) {
-          Services.scriptloader.loadSubScript("resource://pdf.js/build/pdf.js", win);
+        const errors = [];
+
+        try {
+          const pdfjsLib = ChromeUtils.importESModule("resource://zotero/reader/pdf/build/pdf.mjs");
+          pdfjsLib.GlobalWorkerOptions.workerSrc = "resource://zotero/reader/pdf/build/pdf.worker.mjs";
+          pdfjsAssetBase = "resource://zotero/reader/pdf/web/";
+          return pdfjsLib;
         }
-        win.pdfjsLib.GlobalWorkerOptions.workerSrc = "resource://pdf.js/build/pdf.worker.js";
-        return win.pdfjsLib;
+        catch (error) {
+          errors.push("resource://zotero/reader/pdf/build/pdf.mjs: " + error);
+        }
+
+        try {
+          const pdfjsLib = ChromeUtils.importESModule("resource://reader/pdf/build/pdf.mjs");
+          pdfjsLib.GlobalWorkerOptions.workerSrc = "resource://reader/pdf/build/pdf.worker.mjs";
+          pdfjsAssetBase = "resource://reader/pdf/web/";
+          return pdfjsLib;
+        }
+        catch (error) {
+          errors.push("resource://reader/pdf/build/pdf.mjs: " + error);
+        }
+
+        try {
+          if (!win.pdfjsLib) {
+            Services.scriptloader.loadSubScript("resource://pdf.js/build/pdf.js", win);
+          }
+          win.pdfjsLib.GlobalWorkerOptions.workerSrc = "resource://pdf.js/build/pdf.worker.js";
+          pdfjsAssetBase = "resource://pdf.js/web/";
+          return win.pdfjsLib;
+        }
+        catch (error) {
+          errors.push("resource://pdf.js/build/pdf.js: " + error);
+        }
+
+        throw new Error("Could not load Zotero PDF.js. Tried " + errors.join("; "));
       });
     }
     return pdfjsLibPromise;
+  }
+
+  function getPDFJSAssetURL(path) {
+    return pdfjsAssetBase + path;
+  }
+
+  function getPDFDocumentOptions(win, data) {
+    return {
+      data,
+      ownerDocument: win.document,
+      cMapUrl: getPDFJSAssetURL("cmaps/"),
+      cMapPacked: true,
+      standardFontDataUrl: getPDFJSAssetURL("standard_fonts/"),
+      disableFontFace: true,
+      isImageDecoderSupported: false,
+      isOffscreenCanvasSupported: false,
+      useSystemFonts: false,
+      useWorkerFetch: false,
+      useWasm: false
+    };
   }
 
   async function getThumbnailPath(cacheKey) {
@@ -722,7 +845,17 @@ var PaperFeedViewer = (function () {
   }
 
   async function writeCanvasPNG(win, canvas, path) {
-    const blob = await new Promise((resolve, reject) => {
+    const blob = await canvasToPNGBlob(canvas);
+    const arrayBuffer = await blob.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+
+    await OS.File.writeAtomic(path, bytes, {
+      tmpPath: path + ".tmp"
+    });
+  }
+
+  function canvasToPNGBlob(canvas) {
+    return new Promise((resolve, reject) => {
       try {
         canvas.toBlob((result) => {
           if (result) {
@@ -736,13 +869,6 @@ var PaperFeedViewer = (function () {
       catch (error) {
         reject(new Error("Canvas toBlob failed: " + error));
       }
-    });
-
-    const arrayBuffer = await blob.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-
-    await OS.File.writeAtomic(path, bytes, {
-      tmpPath: path + ".tmp"
     });
   }
 
@@ -785,12 +911,148 @@ var PaperFeedViewer = (function () {
     return match ? match[0] : "Unknown";
   }
 
-  async function openAttachment(win, paper) {
+  async function openPaperInViewer(win, paper) {
+    if (!paper.attachmentID) {
+      return;
+    }
+
+    paper.readerMode = true;
+    if (!paper.readerStatus) {
+      paper.readerStatus = "loading";
+      paper.readerStatusText = "Loading PDF...";
+    }
+    renderViewer(win);
+
+    if (paper.readerJob || paper.readerStatus === "ready") {
+      return;
+    }
+
+    paper.readerJob = renderAttachmentInPaperViewer(win, paper)
+      .catch((error) => {
+        if (!isPaperViewerOpen(win, paper)) {
+          return;
+        }
+        paper.readerStatus = "failed";
+        paper.readerStatusText = "PDF preview unavailable";
+        log("Could not render attachment " + paper.attachmentID + " in Paper Viewer: " + error);
+      })
+      .finally(() => {
+        paper.readerJob = null;
+        renderViewer(win);
+      });
+  }
+
+  async function renderAttachmentInPaperViewer(win, paper) {
+    const attachment = Zotero.Items.get(paper.attachmentID);
+    if (!attachment) {
+      throw new Error("Attachment not found");
+    }
+
+    const filePath = await attachment.getFilePathAsync?.();
+    if (!filePath || !(await OS.File.exists(filePath))) {
+      throw new Error("PDF file not found");
+    }
+
+    revokeReaderResources(win, paper);
+    paper.readerPages = [];
+    paper.readerObjectURLs = [];
+    paper.readerStatus = "loading";
+    paper.readerStatusText = "Reading PDF...";
+    renderViewer(win);
+
+    const pdfjsLib = await getPDFJSLib(win);
+    const data = await OS.File.read(filePath);
+    const loadingTask = pdfjsLib.getDocument(getPDFDocumentOptions(win, data));
+
+    let pdf = null;
+    try {
+      pdf = await loadingTask.promise;
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+        if (!isPaperViewerOpen(win, paper)) {
+          return;
+        }
+        paper.readerStatusText = "Rendering page " + pageNumber + " of " + pdf.numPages + "...";
+        const renderedPage = await renderReaderPage(win, pdf, pageNumber);
+        if (!isPaperViewerOpen(win, paper)) {
+          try {
+            win.URL.revokeObjectURL(renderedPage.url);
+          }
+          catch (error) {}
+          return;
+        }
+        paper.readerPages.push(renderedPage);
+        paper.readerObjectURLs.push(renderedPage.url);
+        renderViewer(win);
+      }
+
+      paper.readerStatus = "ready";
+      paper.readerStatusText = "PDF loaded";
+    }
+    finally {
+      try {
+        await pdf?.destroy();
+      }
+      catch (error) {}
+    }
+  }
+
+  async function renderReaderPage(win, pdf, pageNumber) {
+    const page = await pdf.getPage(pageNumber);
+    const baseViewport = page.getViewport({ scale: 1 });
+    const scale = Math.min(READER_MAX_PAGE_WIDTH / baseViewport.width, READER_MAX_PAGE_SCALE);
+    const viewport = page.getViewport({ scale });
+    const canvas = win.document.createElementNS(HTML_NS, "canvas");
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) {
+      throw new Error("Could not create 2D canvas context");
+    }
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    await page.render({
+      canvasContext: context,
+      viewport
+    }).promise;
+
+    const blob = await canvasToPNGBlob(canvas);
+    const url = win.URL.createObjectURL(blob);
+    return {
+      pageNumber,
+      url,
+      width: canvas.width,
+      height: canvas.height
+    };
+  }
+
+  function isPaperViewerOpen(win, paper) {
+    const state = windows.get(win);
+    return Boolean(state?.overlay && state.papers.includes(paper));
+  }
+
+  function revokeReaderResources(win, paper) {
+    if (!paper?.readerObjectURLs?.length) {
+      return;
+    }
+
+    for (let url of paper.readerObjectURLs) {
+      try {
+        win.URL.revokeObjectURL(url);
+      }
+      catch (error) {}
+    }
+    paper.readerObjectURLs = [];
+  }
+
+  async function openAttachmentInBackground(win, paper) {
     if (!paper.attachmentID) {
       return;
     }
 
     try {
+      setBackgroundOpenFeedback(win, paper, "opened");
       if (win.ZoteroPane?.viewAttachment) {
         await win.ZoteroPane.viewAttachment(paper.attachmentID);
         return;
@@ -804,8 +1066,23 @@ var PaperFeedViewer = (function () {
       }
     }
     catch (error) {
-      log("Could not open attachment " + paper.attachmentID + ": " + error);
+      paper.backgroundOpenStatus = null;
+      renderViewer(win);
+      log("Could not open attachment " + paper.attachmentID + " in Zotero: " + error);
     }
+  }
+
+  function setBackgroundOpenFeedback(win, paper, status) {
+    paper.backgroundOpenStatus = status;
+    if (paper.backgroundOpenTimer) {
+      win.clearTimeout(paper.backgroundOpenTimer);
+    }
+    paper.backgroundOpenTimer = win.setTimeout(() => {
+      paper.backgroundOpenStatus = null;
+      paper.backgroundOpenTimer = null;
+      renderViewer(win);
+    }, 1800);
+    renderViewer(win);
   }
 
   function ensureStyles(doc) {
@@ -873,10 +1150,16 @@ var PaperFeedViewer = (function () {
       .pfv-card {
         align-items: stretch;
         display: grid;
-        gap: 56px;
-        grid-template-columns: minmax(300px, 1.25fr) minmax(260px, 0.65fr);
+        gap: 40px;
+        grid-template-columns: minmax(360px, 1fr) minmax(200px, 280px);
         min-height: 500px;
+        min-width: 0;
         width: 100%;
+      }
+
+      .pfv-card-reading {
+        grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+        min-height: 0;
       }
 
       .pfv-preview {
@@ -889,6 +1172,7 @@ var PaperFeedViewer = (function () {
         gap: 18px;
         justify-content: center;
         min-height: 520px;
+        min-width: 0;
         overflow: hidden;
         padding: 0;
       }
@@ -944,6 +1228,49 @@ var PaperFeedViewer = (function () {
         object-fit: contain;
       }
 
+      .pfv-pdf-reader {
+        align-self: stretch;
+        background: #1a1d20;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        max-height: calc(100vh - 172px);
+        max-width: 100%;
+        min-height: 0;
+        min-width: 0;
+        overflow: auto;
+        padding: 22px;
+        box-sizing: border-box;
+        width: 100%;
+      }
+
+      .pfv-reader-pages {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .pfv-reader-page {
+        background: #ffffff;
+        border-radius: 3px;
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.36);
+        display: block;
+        height: auto;
+        max-width: 100%;
+        min-width: 0;
+      }
+
+      .pfv-reader-message {
+        align-self: center;
+        color: #c7ced8;
+        font-size: 13px;
+        padding: 8px 0;
+      }
+
       .pfv-preview-label {
         color: #aeb7c2;
         font-size: 13px;
@@ -965,12 +1292,13 @@ var PaperFeedViewer = (function () {
         align-self: center;
         justify-self: start;
         min-width: 0;
-        max-width: 380px;
+        max-width: 280px;
+        width: 100%;
       }
 
       .pfv-paper-title {
         color: #ffffff;
-        font-size: 24px;
+        font-size: 20px;
         font-weight: 750;
         line-height: 1.18;
         margin: 0 0 12px;
@@ -979,16 +1307,16 @@ var PaperFeedViewer = (function () {
 
       .pfv-creators {
         color: #d3d8de;
-        font-size: 14px;
-        margin-bottom: 22px;
+        font-size: 13px;
+        margin-bottom: 18px;
       }
 
       .pfv-metadata-row {
         border-top: 1px solid rgba(255, 255, 255, 0.09);
         display: grid;
-        gap: 16px;
-        grid-template-columns: 104px minmax(0, 1fr);
-        padding: 13px 0;
+        gap: 4px;
+        grid-template-columns: 1fr;
+        padding: 10px 0;
       }
 
       .pfv-metadata-label {
@@ -1006,11 +1334,19 @@ var PaperFeedViewer = (function () {
 
       .pfv-actions {
         display: flex;
+        flex-direction: column;
         gap: 10px;
-        margin-top: 26px;
+        margin-top: 20px;
+      }
+
+      .pfv-action-feedback {
+        color: #9bd6ad;
+        font-size: 12px;
+        font-weight: 700;
       }
 
       .pfv-primary-button,
+      .pfv-secondary-button,
       .pfv-icon-button,
       .pfv-nav-button {
         appearance: none;
@@ -1025,8 +1361,17 @@ var PaperFeedViewer = (function () {
         color: #17120b;
         font-weight: 750;
         min-height: 42px;
-        min-width: 96px;
+        width: 100%;
         padding: 0 18px;
+      }
+
+      .pfv-secondary-button {
+        background: rgba(255, 255, 255, 0.1);
+        color: #f8fafc;
+        font-weight: 700;
+        min-height: 42px;
+        width: 100%;
+        padding: 0 16px;
       }
 
       .pfv-icon-button,
@@ -1052,12 +1397,14 @@ var PaperFeedViewer = (function () {
       }
 
       .pfv-primary-button:hover,
+      .pfv-secondary-button:hover,
       .pfv-icon-button:hover,
       .pfv-nav-button:hover {
         filter: brightness(1.08);
       }
 
       .pfv-primary-button:disabled,
+      .pfv-secondary-button:disabled,
       .pfv-nav-button:disabled {
         cursor: default;
         filter: grayscale(1);
@@ -1076,6 +1423,10 @@ var PaperFeedViewer = (function () {
           min-height: 0;
         }
 
+        .pfv-card-reading {
+          grid-template-columns: 1fr;
+        }
+
         .pfv-preview {
           min-height: 300px;
           padding: 0;
@@ -1090,8 +1441,13 @@ var PaperFeedViewer = (function () {
           max-width: min(98%, 340px);
         }
 
+        .pfv-pdf-reader {
+          max-height: 58vh;
+          padding: 12px;
+        }
+
         .pfv-paper-title {
-          font-size: 20px;
+          font-size: 18px;
         }
 
         .pfv-metadata-row {

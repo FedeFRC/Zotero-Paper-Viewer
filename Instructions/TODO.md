@@ -2,11 +2,11 @@
 
 ## Milestone 1: Loadable Plugin
 
-- Create Zotero 7 plugin project scaffold.
+- Create Zotero plugin project scaffold.
 - Configure plugin ID, name, version, and build output.
 - Add basic startup and shutdown lifecycle handlers.
 - Add a simple menu item or toolbar entry named `Paper Viewer`.
-- Confirm the plugin loads in Zotero 7.
+- Confirm the plugin loads in the targeted Zotero desktop version.
 
 ## Milestone 2: Viewer Shell
 
@@ -35,10 +35,12 @@
 - Queue missing thumbnails in the background.
 - Show clear fallback states for missing, unavailable, or unsupported files.
 
-## Milestone 5: Open Action
+## Milestone 5: Open Actions
 
-- Add `Open` button to the paper card.
-- Open the selected paper's PDF in Zotero's native reader.
+- Add `Open in Paper Viewer` button to the paper card.
+- Render the selected paper's PDF as vertically scrollable page previews inside Paper Viewer.
+- Add `Open in background` button to the paper card.
+- Open the selected paper's PDF in Zotero's native reader and show click feedback.
 - Handle missing attachment or unavailable local file.
 
 ## Milestone 6: Polish
@@ -55,7 +57,8 @@
 
 - Horizontal filmstrip or mini-map.
 - Vertical feed mode.
-- Built-in reader mode with vertical page scrolling.
+- Zoom controls for in-view PDF previews.
+- Higher-quality re-rendering for zoomed PDF previews.
 - Read/unread status.
 - Tag and color filters.
 - Abstract preview.

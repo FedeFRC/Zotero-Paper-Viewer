@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $dist = Join-Path $root "dist"
-$xpi = Join-Path $dist "paper-viewer-0.2.8.xpi"
+$xpi = Join-Path $dist "paper-viewer-0.3.6.xpi"
 
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 

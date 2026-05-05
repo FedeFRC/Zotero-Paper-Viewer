@@ -2,14 +2,14 @@
 
 ## Requirements
 
-- Zotero 7 desktop.
+- Zotero desktop. The current development build targets Zotero `9.0.*`.
 - A local plugin development environment.
 - Node.js and npm or pnpm.
-- A Zotero 7 plugin template, preferably a TypeScript-based template.
+- A Zotero plugin template, preferably a TypeScript-based template.
 
 ## Recommended Starting Point
 
-Start from an existing Zotero 7 plugin template rather than a blank folder.
+Start from an existing Zotero plugin template rather than a blank folder.
 
 Recommended template:
 
@@ -34,7 +34,7 @@ Zotero plugins usually define lifecycle behavior such as startup and shutdown. T
 
 ## Development Flow
 
-1. Create the plugin project from a Zotero 7 plugin template.
+1. Create the plugin project from a Zotero plugin template.
 2. Set the plugin ID, name, description, and version.
 3. Build the plugin.
 4. Install the generated `.xpi` file into Zotero for testing.
@@ -69,6 +69,7 @@ file size
 4. Current collection/search item list.
 5. Horizontal navigation.
 6. Basic metadata card.
-7. Open PDF in Zotero reader.
-8. First-page thumbnail cache.
-9. Polish and packaging.
+7. First-page thumbnail cache.
+8. Open PDF in Zotero reader in the background.
+9. Add lightweight in-view PDF preview.
+10. Polish and packaging.

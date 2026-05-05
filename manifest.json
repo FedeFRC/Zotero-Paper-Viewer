@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Paper Viewer",
-  "version": "0.2.8",
+  "version": "0.3.6",
   "description": "A focused paper gallery viewer for Zotero collections and searches.",
   "author": "Local development",
   "applications": {
@@ -9,7 +9,7 @@
       "id": "paper-feed-viewer@example.com",
       "update_url": "https://example.com/paper-feed-viewer/updates.json",
       "strict_min_version": "6.999",
-      "strict_max_version": "8.0.*"
+      "strict_max_version": "9.0.*"
     }
   }
 }
