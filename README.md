@@ -7,7 +7,7 @@ A Zotero desktop plugin that adds a dark paper gallery and lightweight in-view P
 You do not need to build the plugin to test the latest public release.
 
 1. Download the latest XPI:
-   [latest Paper Viewer release](https://github.com/FedeFRC/Zotero-Paper-Viewer/releases/latest)
+   [paper-viewer-0.3.6.xpi](https://github.com/FedeFRC/Zotero-Paper-Viewer/releases/latest/download/paper-viewer-0.3.6.xpi)
 2. In Zotero, open `Tools` -> `Plugins`.
 3. Click the gear icon, then choose `Install Add-on From File...`.
 4. Select the downloaded `.xpi` file.
