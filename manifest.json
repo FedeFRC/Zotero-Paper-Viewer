@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Paper Viewer",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "A focused paper gallery viewer for Zotero collections and searches.",
   "author": "Local development",
   "applications": {

@@ -2,7 +2,8 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $dist = Join-Path $root "dist"
-$xpi = Join-Path $dist "paper-viewer-0.3.6.xpi"
+$package = Get-Content (Join-Path $root "package.json") | ConvertFrom-Json
+$xpi = Join-Path $dist "paper-viewer-$($package.version).xpi"
 
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 

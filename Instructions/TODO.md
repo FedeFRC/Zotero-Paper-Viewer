@@ -1,5 +1,9 @@
 # TODO
 
+## Next Priority
+
+- Replace the current page-image PDF preview with direct in-plugin PDF display when clicking `Open in Paper Viewer`.
+
 ## Milestone 1: Loadable Plugin
 
 - Create Zotero plugin project scaffold.

@@ -7,13 +7,13 @@ A Zotero desktop plugin that adds a dark paper gallery and lightweight in-view P
 You do not need to build the plugin to test the latest public release.
 
 1. Download the latest XPI:
-   [paper-viewer-0.3.6.xpi](https://github.com/FedeFRC/Zotero-Paper-Viewer/releases/latest/download/paper-viewer-0.3.6.xpi)
+   [paper-viewer-0.3.7.xpi](https://github.com/FedeFRC/Zotero-Paper-Viewer/releases/latest/download/paper-viewer-0.3.7.xpi)
 2. In Zotero, open `Tools` -> `Plugins`.
 3. Click the gear icon, then choose `Install Add-on From File...`.
 4. Select the downloaded `.xpi` file.
 5. Restart Zotero if prompted.
 
-The current local development build is `0.3.6` and targets Zotero `9.0.*`. Earlier builds were tested with Zotero `7.0.32` on Windows.
+The current local development build is `0.3.7` and targets Zotero `9.0.*`. Earlier builds were tested with Zotero `7.0.32` on Windows.
 
 ## Use
 
@@ -62,7 +62,7 @@ npm run build
 The generated plugin package is:
 
 ```text
-dist/paper-viewer-0.3.6.xpi
+dist/paper-viewer-0.3.7.xpi
 ```
 
 Install the locally built package through Zotero's `Tools` -> `Plugins` window.
@@ -90,7 +90,8 @@ When testing a new local build:
 
 ## Next Steps
 
-1. Test first-page thumbnail generation with small, medium, and large collections.
-2. Tighten item-list retrieval if additional Zotero item-tree edge cases appear.
-3. Add zoom controls or higher-quality re-rendering for the in-view PDF preview.
-4. Add cache cleanup for stale thumbnail files.
+1. Replace the page-image preview with direct in-plugin PDF display when clicking `Open in Paper Viewer`.
+2. Test first-page thumbnail generation with small, medium, and large collections.
+3. Tighten item-list retrieval if additional Zotero item-tree edge cases appear.
+4. Add zoom controls or higher-quality re-rendering for the in-view PDF preview.
+5. Add cache cleanup for stale thumbnail files.

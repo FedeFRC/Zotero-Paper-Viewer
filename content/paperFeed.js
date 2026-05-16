@@ -240,13 +240,7 @@ var PaperFeedViewer = (function () {
 
     main.append(previousButton, renderCard(doc, paper, win), nextButton);
 
-    const footer = html(doc, "footer", "pfv-footer");
-    footer.append(
-      html(doc, "span", "pfv-status", "Use left and right arrow keys to browse."),
-      html(doc, "span", "pfv-status", pluginContext ? "v" + pluginContext.version : "")
-    );
-
-    state.overlay.append(header, main, footer);
+    state.overlay.append(header, main);
     queueVisibleThumbnails(win);
   }
 
@@ -1105,8 +1099,7 @@ var PaperFeedViewer = (function () {
         z-index: 2147483647;
       }
 
-      .pfv-header,
-      .pfv-footer {
+      .pfv-header {
         align-items: center;
         display: flex;
         justify-content: space-between;
@@ -1116,12 +1109,6 @@ var PaperFeedViewer = (function () {
 
       .pfv-header {
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .pfv-footer {
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        color: #9ca3af;
-        font-size: 12px;
       }
 
       .pfv-kicker {
